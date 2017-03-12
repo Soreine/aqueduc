@@ -1,0 +1,38 @@
+{
+  "name": "aqueduc",
+  "version": "0.0.0",
+  "description": "Server-side rendering for async component (React + Redux)",
+  "main": "./lib/index.js",
+  "scripts": {
+    "prepublish": "babel --out-dir ./lib ./src",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SamyPesse/aqueduc.git"
+  },
+  "keywords": [
+    "redux",
+    "react",
+    "ssr"
+  ],
+  "author": "Samy Pesse <samypesse@gmail.com>",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/SamyPesse/aqueduc/issues"
+  },
+  "homepage": "https://github.com/SamyPesse/aqueduc#readme",
+  "devDependencies": {
+    "babel-cli": "^6.23.0",
+    "babel-core": "^6.23.1",
+    "babel-plugin-transform-flow-strip-types": "^6.22.0",
+    "babel-preset-es2015": "^6.22.0",
+    "babel-preset-react": "^6.23.0",
+    "babel-preset-stage-0": "^6.22.0",
+    "eslint": "^3.17.1",
+    "eslint-config-gitbook": "^1.5.0"
+  },
+  "peerDependencies": {
+    "react": "^15.4.2"
+  }
+}
