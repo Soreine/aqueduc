@@ -48,6 +48,10 @@ const connectToStore = ReactRedux.connect((state, props) => ({
 // Connect to aqueduc to fetch the user when needed
 // The component will be rendered again once the returned promise is resolved
 const connectToAqueduc = Aqueduc.connect((props) => {
+    if (props.user) {
+        return;
+    }
+
     return props.dispatch(fetchUser(props.username));
 });
 
