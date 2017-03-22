@@ -1,8 +1,18 @@
 # Aqueduc
 
-Async server-side rendering for react and flux. It solves the problematic of rendering React+Redux application with async components being rendered once data are fetched.
+[![Build Status](https://travis-ci.org/SamyPesse/aqueduc.svg?branch=master)](https://travis-ci.org/SamyPesse/aqueduc)
+[![NPM version](https://badge.fury.io/js/aqueduc.svg)](http://badge.fury.io/js/aqueduc)
 
-Aqueduc is "flux-agnostic", and works very well with `redux` and `react-redux`.
+Aqueduc provides async server-side rendering (SSR) for React/Flux based applications. It solves the problematic of rendering React application with async components being rendered once data are fetched.
+
+Aqueduc is "flux-agnostic", and works perfectly with `redux` and `react-redux`.
+
+A few notes to understand Aqueduc:
+
+1. Connect a component which requires async data to a function to trigger a fetch once needed
+2. Aqueduc will trigger fetch recursively while rendering the application in depth
+3. Aqueduc **doesn't** store the data, neither pass it as props; your flux store is responsible for storing the data.
+4. It works both on client and server rendering with a simple API
 
 ### Installation
 
@@ -14,7 +24,7 @@ $ npm install aqueduc --save
 
 The first step is to connect components that require async data.
 
-For example, let's consider an `<UserProfile username="johndoe" />` component.
+For example, let's consider an `<UserProfile userID="johndoe" />` component.
 
 ```js
 import React from 'react';
@@ -23,10 +33,15 @@ import Aqueduc from 'aqueduc';
 
 import { fetchUser } from './actions/user';
 
+/*
+ * The UserProfile render informations about an user after fetching it from an API.
+ */
 const UserProfile = React.createClass({
     render() {
         const { user } = this.props;
 
+        // If the user is not fetched yet, we can render a placeholder
+        // or return null to hide this component.
         if (!user) {
             return null;
         }
@@ -40,35 +55,45 @@ const UserProfile = React.createClass({
     }
 });
 
-// Connect the component to our redux store
+/*
+ * We connect the component to our redux store,
+ * the store contains a caching of all fetched users.
+ */
 const connectToStore = ReactRedux.connect((state, props) => ({
-    user: state.getUser(props.username)
+    user: state.getUser(props.userID)
 }));
 
-// Connect to aqueduc to fetch the user when needed
-// The component will be rendered again once the returned promise is resolved
+/*
+ * We connect the component to Aqueduc to dispatch a fetching action
+ * if we don't have the user in the cache.
+ */
 const connectToAqueduc = Aqueduc.connect((props) => {
+    // We return nothing if no async operation is needed.
+    // This condition can be changed to fetch it again if cache is old, etc
     if (props.user) {
         return;
     }
 
-    return props.dispatch(fetchUser(props.username));
+    return props.dispatch(fetchUser(props.userID));
 });
 
 export default connectToAqueduc(connectToStore(UserProfile));
 ```
 
-On the server, you can use Aqueduc to render the whole async application:
+Rendering on the client-side doesn't require any more work.
+
+But if we want to render our entire application to HTML on the server, we should use `Aqueduc.render` instead of `ReactDOM.renderToString`.
 
 ```js
 import React from 'react';
-import ReactDOMServer from 'react-dom/server';
-import Aqueduc from 'aqueduc';
+import { render } from 'aqueduc/server';
 
 import UserProfile from './UserProfile';
 
-Aqueduc.render(<UserProfile username="johndoe" />)
-.then((el) => {
-    return ReactDOMServer.renderToString(el);
+Aqueduc.render(
+    () => <UserProfile userID="johndoe" />
+)
+.then((html) => {
+    console.log(html);
 });
 ```

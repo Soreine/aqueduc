@@ -1,8 +1,14 @@
+/* @flow */
+
 import React from 'react';
 
+/*
+ * Provider for context used in the server-side.
+ */
 const Provider = React.createClass({
     propTypes: {
-        children: React.PropTypes.node
+        children: React.PropTypes.node,
+        pushAQPending: React.PropTypes.func.isRequired
     },
 
     childContextTypes: {
@@ -10,7 +16,10 @@ const Provider = React.createClass({
     },
 
     getChildContext() {
-
+        const { pushAQPending } = this.props;
+        return {
+            pushAQPending
+        };
     },
 
     render() {
