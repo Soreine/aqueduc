@@ -3,5 +3,8 @@
     "extends": "gitbook",
     "plugins": [
         "flowtype"
-    ]
+    ],
+    "env": {
+        "jest": true
+    }
 }

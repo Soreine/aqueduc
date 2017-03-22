@@ -3,47 +3,51 @@
 import React from 'react';
 
 type MapPropsToPromise = (props: Object) => ?Promise<*>;
-type ComponentConstructor = () => React.Component;
+type ComponentWrapper = (React.Component<*,*,*>) => React.Component<*,*,*>;
 
 /*
  *
  */
 function connect(
     mapPropsToPromise: MapPropsToPromise
-) : ComponentConstructor {
+) : ComponentWrapper {
     return (Component) => {
-        return React.createClass({
-            childContextTypes: {
-                pushAQPending: React.PropTypes.func
-            },
+
+        class AqueducContext extends React.Component {
 
             /*
              * On browser, we fetch the resources on mount and update.
              */
             componentDidMount() {
                 mapPropsToPromise(this.props);
-            },
+            }
 
             componentWillReceiveProps(nextProps) {
                 mapPropsToPromise(nextProps);
-            },
+            }
 
             render() {
-                const { pushAQPending } = this.context;
+                const { enqueueAQPromise } = this.context;
                 const { props } = this;
 
                 // On server-side rendering, we prepare for next rendering.
-                if (pushAQPending) {
+                if (enqueueAQPromise) {
                     const promise : ?Promise<*> = mapPropsToPromise(props);
 
                     if (promise) {
-                        pushAQPending(promise);
+                        enqueueAQPromise(promise);
                     }
                 }
 
                 return <Component {...props} />;
             }
-        });
+        }
+
+        AqueducContext.contextTypes = {
+            enqueueAQPromise: React.PropTypes.func
+        };
+
+        return AqueducContext;
     };
 }
 

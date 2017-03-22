@@ -8,17 +8,17 @@ import React from 'react';
 const Provider = React.createClass({
     propTypes: {
         children: React.PropTypes.node,
-        pushAQPending: React.PropTypes.func.isRequired
+        enqueue: React.PropTypes.func.isRequired
     },
 
     childContextTypes: {
-        pushAQPending: React.PropTypes.func
+        enqueueAQPromise: React.PropTypes.func
     },
 
     getChildContext() {
-        const { pushAQPending } = this.props;
+        const { enqueue } = this.props;
         return {
-            pushAQPending
+            enqueueAQPromise: enqueue
         };
     },
 

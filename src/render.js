@@ -12,12 +12,12 @@ function render(
     getElement: () => React$Element<*>
 ) : Promise<string> {
     const pending = [];
-    const pushAQPending = (promise) => {
+    const enqueue = (promise) => {
         pending.push(promise);
     };
 
     const result = (
-        <Provider pushAQPending={pushAQPending}>
+        <Provider enqueue={enqueue}>
             {getElement()}
         </Provider>
     );

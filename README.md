@@ -77,7 +77,7 @@ const connectToAqueduc = Aqueduc.connect((props) => {
     return props.dispatch(fetchUser(props.userID));
 });
 
-export default connectToAqueduc(connectToStore(UserProfile));
+export default connectToStore(connectToAqueduc(UserProfile));
 ```
 
 Rendering on the client-side doesn't require any more work.
@@ -114,4 +114,7 @@ Yes, Aqueduc is "flux-agnostic", but this repository only showcase examples with
 
 If your connector has a loophole, it may cause an infinite loop when using `Aqueduc.render`.
 
-For example, it happens if the connector returns a promise when the fetching has already be done but returned an error.
+It may happen because:
+
+- the connector returns a promise when the fetching has already be done but returned an error
+- Connection of `react-redux` and `aqueduc` are reversed
