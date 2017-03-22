@@ -2,16 +2,25 @@
 
 import React from 'react';
 
-type MapPropsToPromise = (props: Object) => ?Promise<*>;
-type ComponentWrapper = (React.Component<*,*,*>) => React.Component<*,*,*>;
+type MapPropsToPromise = (
+    props: Object,
+    prevProps: ?Object
+) => ?Promise<*>;
+
+type Cleanup = (
+    props: Object
+) => ?Promise<*>;
+
+type ComponentWrapper = (ReactClass<*>) => ReactClass<*>;
 
 /*
  *
  */
 function connect(
-    mapPropsToPromise: MapPropsToPromise
+    mapPropsToPromise: MapPropsToPromise,
+    cleanup: Cleanup = () => {}
 ) : ComponentWrapper {
-    return (Component) => {
+    return (Component: ReactClass<*>) => {
 
         class AqueducContext extends React.Component {
 
@@ -23,11 +32,18 @@ function connect(
             }
 
             componentWillReceiveProps(nextProps) {
-                mapPropsToPromise(nextProps);
+                mapPropsToPromise(nextProps, this.props);
+            }
+
+            componentWillUnmount() {
+                cleanup(this.props);
             }
 
             render() {
-                const { enqueueAQPromise } = this.context;
+                const {
+                    enqueueAQPromise,
+                    enququeAQCleanup
+                } = this.context;
                 const { props } = this;
 
                 // On server-side rendering, we prepare for next rendering.
@@ -36,6 +52,7 @@ function connect(
 
                     if (promise) {
                         enqueueAQPromise(promise);
+                        enququeAQCleanup(() => cleanup(props));
                     }
                 }
 
@@ -44,7 +61,8 @@ function connect(
         }
 
         AqueducContext.contextTypes = {
-            enqueueAQPromise: React.PropTypes.func
+            enqueueAQPromise: React.PropTypes.func,
+            enququeAQCleanup: React.PropTypes.func
         };
 
         return AqueducContext;

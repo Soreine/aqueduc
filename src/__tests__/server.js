@@ -1,3 +1,4 @@
+/* eslint react/prop-types: 0 */
 import React from 'react';
 import * as ReactRedux from 'react-redux';
 
@@ -97,6 +98,45 @@ const AsyncDeferredDeep = ReactRedux.connect(
     )
 );
 
+
+const AsyncDeferredWithCleanup = ReactRedux.connect(
+    (state, props) => {
+        return { value: state[props.stateKey] };
+    }
+)(
+    connect(
+        (props) => {
+            if (props.value) {
+                return;
+            }
+
+            return new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    props.dispatch({
+                        type: 'set',
+                        key: props.stateKey,
+                        value: props.expectedValue
+                    });
+                    resolve();
+                }, 10);
+            });
+        },
+        (props) => {
+            props.dispatch({
+                type: 'set',
+                key: props.stateKey,
+                value: null
+            });
+        }
+    )(
+        React.createClass({
+            render() {
+                return <div>{this.props.stateKey}={this.props.value}</div>;
+            }
+        })
+    )
+);
+
 it('should render when no async components', () => {
     return render(
         () => <Sync />
@@ -150,5 +190,24 @@ it('should render cascade of async components', () => {
     )
     .then((html) => {
         expect(html).toEqual('<div data-reactroot=\"\" data-reactid=\"1\" data-react-checksum=\"-75090804\"><!-- react-text: 2 -->b4321<!-- /react-text --><!-- react-text: 3 -->=<!-- /react-text --><!-- react-text: 4 -->5<!-- /react-text --></div>');
+    });
+});
+
+it('should call cleanup (shallow)', () => {
+    const store = createTestStore();
+
+    return render(
+        () => (
+            <ReactRedux.Provider store={store}>
+                <AsyncDeferredWithCleanup
+                    stateKey="a"
+                    expectedValue="yoyo"
+                    />
+            </ReactRedux.Provider>
+        )
+    )
+    .then((html) => {
+        expect(html).toEqual('<div data-reactroot=\"\" data-reactid=\"1\" data-react-checksum=\"47461724\"><!-- react-text: 2 -->a<!-- /react-text --><!-- react-text: 3 -->=<!-- /react-text --><!-- react-text: 4 -->yoyo<!-- /react-text --></div>');
+        expect(store.getState()).toEqual({ a: null });
     });
 });
