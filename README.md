@@ -97,3 +97,21 @@ Aqueduc.render(
     console.log(html);
 });
 ```
+
+### FAQ
+
+##### How well does Aqueduc “scale” in terms of performance?
+
+Aqueduc performances depend on your application. If your application doesn't have async components, it'll be as fast as `ReactDOM.renderToString`.
+
+But if your application has too many level of depth with async components, performances can drop. In that case the solution is to move most of the async requirements top-level so that `Aqueduc` can do parallel fetching.
+
+##### Can I use Aqueduc with another flux implementation than Redux ?
+
+Yes, Aqueduc is "flux-agnostic", but this repository only showcase examples with Redux.
+
+##### Rendering is causing an infinite loop, what is happening ?
+
+If your connector has a loophole, it may cause an infinite loop when using `Aqueduc.render`.
+
+For example, it happens if the connector returns a promise when the fetching has already be done but returned an error.

@@ -1,13 +1,15 @@
 /* @flow */
 
-import ReactDOMServer from 'react-dom/server'
+import React from 'react';
+import ReactDOMServer from 'react-dom/server';
 import Provider from './Provider';
 
 /*
  * Recursively render a react element until all async resolutions are completed.
+ * This function is made for the server.
  */
 function render(
-    getElement: () => el: React$Element<*>
+    getElement: () => React$Element<*>
 ) : Promise<string> {
     const pending = [];
     const pushAQPending = (promise) => {
@@ -32,7 +34,7 @@ function render(
     return Promise.all(pending)
     .then(() => {
         return render(getElement);
-    })
+    });
 }
 
 export default render;
