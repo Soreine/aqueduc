@@ -50,11 +50,52 @@ const AsyncDeferred = ReactRedux.connect(
     )
 );
 
-const Shallow = React.createClass({
-    render() {
-
+// For testing async component in cascade
+const AsyncDeferredDeep = ReactRedux.connect(
+    (state, props) => {
+        return { value: state[props.stateKey] };
     }
-});
+)(
+    connect(
+        (props) => {
+            if (props.value) {
+                return;
+            }
+
+            return new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    props.dispatch({
+                        type: 'set',
+                        key: props.stateKey,
+                        value: props.expectedValue
+                    });
+                    resolve();
+                }, 10);
+            });
+        }
+    )(
+        React.createClass({
+            render() {
+                const { depth, stateKey, value } = this.props;
+                if (!value) {
+                    return null;
+                }
+
+                if (depth == 0) {
+                    return <div>{stateKey}={value}</div>;
+                }
+
+                return (
+                    <AsyncDeferredDeep
+                        stateKey={`${stateKey}${depth}`}
+                        expectedValue={value + 1}
+                        depth={depth - 1}
+                        />
+                );
+            }
+        })
+    )
+);
 
 it('should render when no async components', () => {
     return render(
@@ -80,11 +121,34 @@ it('should render top-level async component', () => {
     return render(
         () => (
             <ReactRedux.Provider store={store}>
-                <AsyncDeferred stateKey="a" expectedValue="yoyo" />
+                <AsyncDeferred
+                    stateKey="a"
+                    expectedValue="yoyo"
+                    />
             </ReactRedux.Provider>
         )
     )
     .then((html) => {
         expect(html).toEqual('<div data-reactroot=\"\" data-reactid=\"1\" data-react-checksum=\"47461724\"><!-- react-text: 2 -->a<!-- /react-text --><!-- react-text: 3 -->=<!-- /react-text --><!-- react-text: 4 -->yoyo<!-- /react-text --></div>');
+    });
+});
+
+
+it('should render cascade of async components', () => {
+    const store = createTestStore();
+
+    return render(
+        () => (
+            <ReactRedux.Provider store={store}>
+                <AsyncDeferredDeep
+                    stateKey="b"
+                    expectedValue={1}
+                    depth={4}
+                    />
+            </ReactRedux.Provider>
+        )
+    )
+    .then((html) => {
+        expect(html).toEqual('<div data-reactroot=\"\" data-reactid=\"1\" data-react-checksum=\"-75090804\"><!-- react-text: 2 -->b4321<!-- /react-text --><!-- react-text: 3 -->=<!-- /react-text --><!-- react-text: 4 -->5<!-- /react-text --></div>');
     });
 });
