@@ -118,7 +118,7 @@ The cleanup callback is called on `componentWillUnmount` when rendering on clien
 ```js
 Aqueduc.connect(
     ({ user, userID, dispatch }) => user ? null : dispatch(fetchAndListenUser(userID)),
-    ({ userID, dispatch }) => dispatch(removeUserListener(userID))
+    (result, { userID, dispatch }) => dispatch(removeUserListener(userID))
 );
 ```
 

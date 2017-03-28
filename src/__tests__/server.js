@@ -121,7 +121,7 @@ const AsyncDeferredWithCleanup = ReactRedux.connect(
                 }, 10);
             });
         },
-        (props) => {
+        (result, props) => {
             props.dispatch({
                 type: 'set',
                 key: props.stateKey,

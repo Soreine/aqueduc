@@ -14,14 +14,14 @@ const Provider = React.createClass({
 
     childContextTypes: {
         enqueueAQPromise: React.PropTypes.func,
-        enququeAQCleanup: React.PropTypes.func
+        enqueueAQCleanup: React.PropTypes.func
     },
 
     getChildContext() {
         const { enqueue, enqueueCleanup } = this.props;
         return {
             enqueueAQPromise: enqueue,
-            enququeAQCleanup: enqueueCleanup
+            enqueueAQCleanup: enqueueCleanup
         };
     },
 

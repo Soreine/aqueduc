@@ -28,21 +28,46 @@ function connect(
              * On browser, we fetch the resources on mount and update.
              */
             componentDidMount() {
-                mapPropsToPromise(this.props);
+                this.fetchAsync(this.props);
             }
 
             componentWillReceiveProps(nextProps) {
-                mapPropsToPromise(nextProps, this.props);
+                this.fetchAsync(nextProps, this.props);
             }
 
-            componentWillUnmount() {
-                cleanup(this.props);
+            /*
+             * Fetch the data and store the cleanup result.
+             */
+            fetchAsync(props, prevProps) {
+                const promise : ?Promise<*> = mapPropsToPromise(props, prevProps);
+
+                if (promise) {
+                    this.cleanup();
+
+                    promise.then(
+                        (result) => {
+                            this.promiseExecuted = true;
+                            this.promiseResult = result;
+                        }
+                    );
+                }
+            }
+
+            /*
+             * Cleanup the result of the fetch.
+             */
+            cleanup() {
+                if (!this.promiseExecuted) {
+                    return;
+                }
+
+                cleanup(this.promiseResult, this.props);
             }
 
             render() {
                 const {
                     enqueueAQPromise,
-                    enququeAQCleanup
+                    enqueueAQCleanup
                 } = this.context;
                 const { props } = this;
 
@@ -52,7 +77,9 @@ function connect(
 
                     if (promise) {
                         enqueueAQPromise(promise);
-                        enququeAQCleanup(() => cleanup(props));
+                        promise.then((result) => {
+                            enqueueAQCleanup(() => cleanup(result, props));
+                        });
                     }
                 }
 
@@ -62,7 +89,7 @@ function connect(
 
         AqueducContext.contextTypes = {
             enqueueAQPromise: React.PropTypes.func,
-            enququeAQCleanup: React.PropTypes.func
+            enqueueAQCleanup: React.PropTypes.func
         };
 
         return AqueducContext;
