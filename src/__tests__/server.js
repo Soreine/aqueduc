@@ -137,6 +137,50 @@ const AsyncDeferredWithCleanup = ReactRedux.connect(
     )
 );
 
+
+const AsyncDeferredWithCleanupResult = ReactRedux.connect(
+    (state, props) => {
+        return { value: state[props.stateKey] };
+    }
+)(
+    connect(
+        (props) => {
+            if (props.value) {
+                return;
+            }
+
+            return new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    props.dispatch({
+                        type: 'set',
+                        key: props.stateKey,
+                        value: props.expectedValue
+                    });
+                    resolve();
+                }, 10);
+            })
+            .then(() => {
+                return () => {
+                    props.dispatch({
+                        type: 'set',
+                        key: props.stateKey,
+                        value: null
+                    });
+                };
+            });
+        },
+        (off, props) => {
+            off();
+        }
+    )(
+        React.createClass({
+            render() {
+                return <div>{this.props.stateKey}={this.props.value}</div>;
+            }
+        })
+    )
+);
+
 it('should render when no async components', () => {
     return render(
         () => <Sync />
@@ -200,6 +244,26 @@ it('should call cleanup (shallow)', () => {
         () => (
             <ReactRedux.Provider store={store}>
                 <AsyncDeferredWithCleanup
+                    stateKey="a"
+                    expectedValue="yoyo"
+                    />
+            </ReactRedux.Provider>
+        )
+    )
+    .then((html) => {
+        expect(html).toEqual('<div data-reactroot=\"\" data-reactid=\"1\" data-react-checksum=\"47461724\"><!-- react-text: 2 -->a<!-- /react-text --><!-- react-text: 3 -->=<!-- /react-text --><!-- react-text: 4 -->yoyo<!-- /react-text --></div>');
+        expect(store.getState()).toEqual({ a: null });
+    });
+});
+
+
+it('should call cleanup with result (shallow)', () => {
+    const store = createTestStore();
+
+    return render(
+        () => (
+            <ReactRedux.Provider store={store}>
+                <AsyncDeferredWithCleanupResult
                     stateKey="a"
                     expectedValue="yoyo"
                     />
