@@ -14,6 +14,8 @@ A few notes to understand Aqueduc:
 3. It **doesn't** store the data, neither pass itself as props; your flux store is responsible for storing/caching the data.
 4. It works both for client and server side rendering with a simple API.
 
+Complete examples can be found in the [examples](./examples) directory.
+
 ### Installation
 
 ```
