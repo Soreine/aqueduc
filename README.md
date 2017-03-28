@@ -71,15 +71,14 @@ const connectToStore = ReactRedux.connect((state, props) => ({
  *
  * We trigger a fetch only the store returned us null for this userID.
  */
-const connectToAqueduc = Aqueduc.connect((props, prevProps) => {
-    // We return nothing if no async operation is needed.
-    // Note: This condition can be changed to fetch it again if cache is obsolete.
-    if (props.user) {
-        return;
+const connectToAqueduc = Aqueduc.connect(
+    (props) => (
+        !props.user
+    ),
+    (props) => {
+        return props.dispatch(fetchUser(props.userID));
     }
-
-    return props.dispatch(fetchUser(props.userID));
-});
+);
 
 export default connectToStore(connectToAqueduc(UserCard));
 ```
@@ -117,9 +116,30 @@ The cleanup callback is called on `componentWillUnmount` when rendering on clien
 
 ```js
 Aqueduc.connect(
+    ({ user }) => !user,
     ({ user, userID, dispatch }) => user ? null : dispatch(fetchAndListenUser(userID)),
-    (result, { userID, dispatch }) => dispatch(removeUserListener(userID))
+    ({ userID, dispatch }, result) => dispatch(removeUserListener(userID))
 );
+```
+
+### API
+
+##### `connect`
+
+```js
+Aqueduc.connect(
+    isFetchNeeded: (props: Props, prevProps: Props) => boolean,
+    fetch: (props: Props) => promise<T>,
+    cleanup: (props: Props, result: T) => any
+) : (Component => Component)
+```
+
+##### `render`
+
+```js
+Aqueduc.render(
+    getElement: () => React.Element
+) : promise<string>
 ```
 
 ### FAQ

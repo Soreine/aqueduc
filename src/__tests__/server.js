@@ -13,7 +13,8 @@ const Sync = React.createClass({
 });
 
 const SyncNoOp = connect(
-    () => null
+    () => false,
+    () => new Promise()
 )(React.createClass({
     render() {
         return <div>Hello</div>;
@@ -26,11 +27,10 @@ const AsyncDeferred = ReactRedux.connect(
     }
 )(
     connect(
+        props => (
+            !props.value
+        ),
         (props) => {
-            if (props.value) {
-                return;
-            }
-
             return new Promise((resolve, reject) => {
                 setTimeout(() => {
                     props.dispatch({
@@ -58,11 +58,10 @@ const AsyncDeferredDeep = ReactRedux.connect(
     }
 )(
     connect(
+        props => (
+            !props.value
+        ),
         (props) => {
-            if (props.value) {
-                return;
-            }
-
             return new Promise((resolve, reject) => {
                 setTimeout(() => {
                     props.dispatch({
@@ -105,11 +104,10 @@ const AsyncDeferredWithCleanup = ReactRedux.connect(
     }
 )(
     connect(
+        props => (
+            !props.value
+        ),
         (props) => {
-            if (props.value) {
-                return;
-            }
-
             return new Promise((resolve, reject) => {
                 setTimeout(() => {
                     props.dispatch({
@@ -144,11 +142,10 @@ const AsyncDeferredWithCleanupResult = ReactRedux.connect(
     }
 )(
     connect(
+        props => (
+            !props.value
+        ),
         (props) => {
-            if (props.value) {
-                return;
-            }
-
             return new Promise((resolve, reject) => {
                 setTimeout(() => {
                     props.dispatch({

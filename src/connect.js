@@ -2,13 +2,18 @@
 
 import React from 'react';
 
-type MapPropsToPromise = (
+type IsFetchNeeded = (
     props: Object,
     prevProps: ?Object
-) => ?Promise<*>;
+) => boolean;
+
+type MapPropsToPromise = (
+    props: Object
+) => Promise<*>;
 
 type Cleanup = (
-    props: Object
+    props: Object,
+    result: ?any
 ) => ?Promise<*>;
 
 type ComponentWrapper = (ReactClass<*>) => ReactClass<*>;
@@ -17,6 +22,7 @@ type ComponentWrapper = (ReactClass<*>) => ReactClass<*>;
  *
  */
 function connect(
+    isFetchNeeded: IsFetchNeeded,
     mapPropsToPromise: MapPropsToPromise,
     cleanup: Cleanup = () => {}
 ) : ComponentWrapper {
@@ -38,19 +44,25 @@ function connect(
             /*
              * Fetch the data and store the cleanup result.
              */
-            fetchAsync(props, prevProps) {
+            fetchAsync(props, prevProps) : ?Promise<*> {
+                if (!isFetchNeeded(props, prevProps)) {
+                    return;
+                }
+
+                // Fetch for new props
                 const promise : ?Promise<*> = mapPropsToPromise(props, prevProps);
 
-                if (promise) {
-                    this.cleanup();
+                // Cleanup previous binding
+                this.cleanup();
 
-                    promise.then(
-                        (result) => {
-                            this.promiseExecuted = true;
-                            this.promiseResult = result;
-                        }
-                    );
-                }
+                return promise.then(
+                    (result) => {
+                        this.promiseExecuted = true;
+                        this.promiseResult = result;
+
+                        return result;
+                    }
+                );
             }
 
             /*
@@ -73,7 +85,7 @@ function connect(
 
                 // On server-side rendering, we prepare for next rendering.
                 if (enqueueAQPromise) {
-                    const promise : ?Promise<*> = mapPropsToPromise(props);
+                    const promise : ?Promise<*> = this.fetchAsync(props);
 
                     if (promise) {
                         enqueueAQPromise(promise);
