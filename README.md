@@ -130,7 +130,8 @@ Aqueduc.connect(
 Aqueduc.connect(
     isFetchNeeded: (props: Props, prevProps: Props) => boolean,
     fetch: (props: Props) => promise<T>,
-    cleanup: (props: Props, result: T) => any
+    cleanup: (props: Props, result: T) => any,
+    options: { withContext: boolean }
 ) : (Component => Component)
 ```
 
@@ -160,3 +161,7 @@ If your connector has a loophole, it may cause an infinite loop when using `Aque
 
 - The connector returns a promise when the fetching is not required or if the component doesn't handle error from the fetch.
 - Connection of `react-redux` and `aqueduc` are reversed.
+
+##### Can I access the `context` of my component in the connector ?
+
+Yes, you can pass a fourth argument to `connect` which is the option and set `withContext` to `true`. The context will be passed as a third argument to `isFetchNeeded`, `fetch` and `cleanup`.

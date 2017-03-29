@@ -178,6 +178,72 @@ const AsyncDeferredWithCleanupResult = ReactRedux.connect(
     )
 );
 
+const AsyncDeferredWithContext = ReactRedux.connect(
+    (state, props) => {
+        return { value: state[props.stateKey] };
+    }
+)(
+    connect(
+        (props, prevProps, context) => {
+            return !props.value && context.stateKey;
+        },
+        (props, prevProps, context) => {
+            return new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    props.dispatch({
+                        type: 'set',
+                        key: context.stateKey,
+                        value: props.expectedValue
+                    });
+                    resolve();
+                }, 10);
+            });
+        },
+        (result, props, context) => {
+            props.dispatch({
+                type: 'set',
+                key: context.stateKey,
+                value: null
+            });
+        },
+        { withContext: true }
+    )(
+        React.createClass({
+            contextTypes: {
+                stateKey: React.PropTypes.string
+            },
+            render() {
+                return <div>{this.context.stateKey}={this.props.value}</div>;
+            }
+        })
+    )
+);
+
+
+// Pass stateKey as a context
+const ContextProvider = React.createClass({
+    propTypes: {
+        children: React.PropTypes.node,
+        stateKey: React.PropTypes.string
+    },
+
+    childContextTypes: {
+        stateKey: React.PropTypes.string
+    },
+
+    getChildContext() {
+        const { stateKey } = this.props;
+        return {
+            stateKey
+        };
+    },
+
+    render() {
+        const { children } = this.props;
+        return React.Children.only(children);
+    }
+});
+
 it('should render when no async components', () => {
     return render(
         () => <Sync />
@@ -253,7 +319,6 @@ it('should call cleanup (shallow)', () => {
     });
 });
 
-
 it('should call cleanup with result (shallow)', () => {
     const store = createTestStore();
 
@@ -264,6 +329,27 @@ it('should call cleanup with result (shallow)', () => {
                     stateKey="a"
                     expectedValue="yoyo"
                     />
+            </ReactRedux.Provider>
+        )
+    )
+    .then((html) => {
+        expect(html).toEqual('<div data-reactroot=\"\" data-reactid=\"1\" data-react-checksum=\"47461724\"><!-- react-text: 2 -->a<!-- /react-text --><!-- react-text: 3 -->=<!-- /react-text --><!-- react-text: 4 -->yoyo<!-- /react-text --></div>');
+        expect(store.getState()).toEqual({ a: null });
+    });
+});
+
+it('should pass context if "withContext" is true', () => {
+    const store = createTestStore();
+
+    return render(
+        () => (
+            <ReactRedux.Provider store={store}>
+                <ContextProvider stateKey="a">
+                    <AsyncDeferredWithContext
+                        stateKey="a"
+                        expectedValue="yoyo"
+                        />
+                </ContextProvider>
             </ReactRedux.Provider>
         )
     )

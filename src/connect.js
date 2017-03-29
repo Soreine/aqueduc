@@ -4,17 +4,24 @@ import React from 'react';
 
 type IsFetchNeeded = (
     props: Object,
-    prevProps: ?Object
+    prevProps: ?Object,
+    context: Object
 ) => boolean;
 
 type MapPropsToPromise = (
-    props: Object
+    props: Object,
+    prevProps: Object,
+    context: Object
 ) => Promise<*>;
 
 type Cleanup = (
     props: Object,
     result: ?any
 ) => ?Promise<*>;
+
+type Options = {
+    withContext: ?boolean
+};
 
 type ComponentWrapper = (ReactClass<*>) => ReactClass<*>;
 
@@ -24,8 +31,13 @@ type ComponentWrapper = (ReactClass<*>) => ReactClass<*>;
 function connect(
     isFetchNeeded: IsFetchNeeded,
     mapPropsToPromise: MapPropsToPromise,
-    cleanup: Cleanup = () => {}
+    cleanup: Cleanup = () => {},
+    options: Options = {}
 ) : ComponentWrapper {
+    const {
+        withContext = false
+    } = options;
+
     return (Component: ReactClass<*>) => {
 
         class AqueducContext extends React.Component {
@@ -45,12 +57,12 @@ function connect(
              * Fetch the data and store the cleanup result.
              */
             fetchAsync(props, prevProps) : ?Promise<*> {
-                if (!isFetchNeeded(props, prevProps)) {
+                if (!isFetchNeeded(props, prevProps, this.context)) {
                     return;
                 }
 
                 // Fetch for new props
-                const promise : ?Promise<*> = mapPropsToPromise(props, prevProps);
+                const promise : ?Promise<*> = mapPropsToPromise(props, prevProps, this.context);
 
                 // Cleanup previous binding
                 this.cleanup();
@@ -73,7 +85,7 @@ function connect(
                     return;
                 }
 
-                cleanup(this.promiseResult, this.props);
+                cleanup(this.promiseResult, this.props, this.context);
             }
 
             render() {
@@ -90,7 +102,7 @@ function connect(
                     if (promise) {
                         enqueueAQPromise(promise);
                         promise.then((result) => {
-                            enqueueAQCleanup(() => cleanup(result, props));
+                            enqueueAQCleanup(() => cleanup(result, props, this.context));
                         });
                     }
                 }
@@ -100,6 +112,7 @@ function connect(
         }
 
         AqueducContext.contextTypes = {
+            ...(withContext ? Component.contextTypes : {}),
             enqueueAQPromise: React.PropTypes.func,
             enqueueAQCleanup: React.PropTypes.func
         };
