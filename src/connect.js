@@ -53,6 +53,10 @@ function connect(
                 this.fetchAsync(nextProps, this.props);
             }
 
+            componentWillUnmount() {
+                this.cleanup();
+            }
+
             /*
              * Fetch the data and store the cleanup result.
              */
