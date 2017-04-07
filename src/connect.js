@@ -15,8 +15,9 @@ type MapPropsToPromise = (
 ) => Promise<*>;
 
 type Cleanup = (
+    result: ?any,
     props: Object,
-    result: ?any
+    context: Object
 ) => ?Promise<*>;
 
 type Options = {
